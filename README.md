@@ -14,6 +14,9 @@ Fitness Tracking application built for Android with Google Fit API using Kotlin 
 - MVVM architecture
 - MPAndroidChart library
 
+## Pre-requisites
+Register a Google Project with an Android client per getting started instructions [http://developers.google.com/fit/android/get-started](http://developers.google.com/fit/android/get-started)
+
 ## Getting Started
 - Clone the repository.
 - Open the project in Android Studio.
