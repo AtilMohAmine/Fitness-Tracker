@@ -1,5 +1,5 @@
 package com.atilmohamine.fitnesstracker.model
 
 data class WeeklyFitnessModel(
-    val dailyFitnessList: List<DailyFitnessModel>
+    val dailyFitnessList: List<DailyFitnessModel> = emptyList()
 )

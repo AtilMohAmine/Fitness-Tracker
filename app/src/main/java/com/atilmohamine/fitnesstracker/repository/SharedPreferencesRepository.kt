@@ -1,10 +1,10 @@
 package com.atilmohamine.fitnesstracker.repository
 
-import android.content.Context
-import android.content.SharedPreferences
+import com.atilmohamine.fitnesstracker.data.ImplementationMode
 
 interface SharedPreferencesRepository {
-    fun saveObjectiveSteps(context: Context, objectiveSteps: Int)
-    fun loadObjectiveSteps(context: Context): Int
-    fun getSharedPreferences(context: Context): SharedPreferences
+    fun saveObjectiveSteps(objectiveSteps: Int)
+    fun loadObjectiveSteps(): Int
+    fun saveImplementationMode(implementationMode: ImplementationMode)
+    fun loadImplementationMode(): Int
 }

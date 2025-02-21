@@ -1,36 +1,68 @@
 package com.atilmohamine.fitnesstracker.viewmodel
 
-import android.content.Context
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.atilmohamine.fitnesstracker.data.ImplementationMode
 import com.atilmohamine.fitnesstracker.model.DailyFitnessModel
 import com.atilmohamine.fitnesstracker.model.WeeklyFitnessModel
+import com.atilmohamine.fitnesstracker.repository.FitnessRepoHealthConnectImpl
 import com.atilmohamine.fitnesstracker.repository.FitnessRepository
 import com.atilmohamine.fitnesstracker.repository.FitnessRepositoryImpl
 import com.atilmohamine.fitnesstracker.repository.SharedPreferencesRepository
 import com.atilmohamine.fitnesstracker.repository.SharedPreferencesRepositoryImpl
+import com.atilmohamine.fitnesstracker.ui.BaseApplication
+import kotlinx.coroutines.launch
 
-class FitnessViewModel: ViewModel() {
+class FitnessViewModel(application: Application) : AndroidViewModel(application) {
 
-    val fitnessRepo: FitnessRepository = FitnessRepositoryImpl()
-    val sharedPreferencesRepo: SharedPreferencesRepository = SharedPreferencesRepositoryImpl()
+    private val healthConnectManager by lazy { (application as BaseApplication).healthConnectManager }
 
-    fun getDailyFitnessData(context: Context): LiveData<DailyFitnessModel> {
-        var dailyFitnessLiveData = fitnessRepo.getDailyFitnessData(context)
-        return dailyFitnessLiveData
+    private val fitnessRepo: FitnessRepository by lazy {
+        when (sharedPreferencesRepo.loadImplementationMode()) {
+            ImplementationMode.GOOGLE_HEALTH_CONNECT.code -> FitnessRepoHealthConnectImpl(
+                healthConnectManager
+            )
+            else -> FitnessRepositoryImpl(application)
+        }
     }
 
-    fun getWeeklyFitnessData(context: Context): LiveData<WeeklyFitnessModel> {
-        var weeklyFitnessLiveData = fitnessRepo.getWeeklyFitnessData(context)
-        return weeklyFitnessLiveData
+    val sharedPreferencesRepo: SharedPreferencesRepository =
+        SharedPreferencesRepositoryImpl(application)
+
+    private val _dailyData = MutableLiveData<DailyFitnessModel>()
+    val dailyData: LiveData<DailyFitnessModel> get() = _dailyData
+
+    private val _weeklyData = MutableLiveData<WeeklyFitnessModel>()
+    val weeklyData: LiveData<WeeklyFitnessModel> get() = _weeklyData
+
+    fun getDailyFitnessData() {
+        viewModelScope.launch {
+                _dailyData.postValue(fitnessRepo.getDailyFitnessData())
+        }
     }
 
-    fun saveObjectiveSteps(context: Context, objectiveSteps: Int) {
-        sharedPreferencesRepo.saveObjectiveSteps(context, objectiveSteps)
+    fun getWeeklyFitnessData() {
+        viewModelScope.launch {
+                _weeklyData.postValue(fitnessRepo.getWeeklyFitnessData())
+        }
     }
 
-    fun loadObjectiveSteps(context: Context): Int {
-        return sharedPreferencesRepo.loadObjectiveSteps(context)
+    fun saveObjectiveSteps(objectiveSteps: Int) {
+        sharedPreferencesRepo.saveObjectiveSteps(objectiveSteps)
     }
 
+    fun loadObjectiveSteps(): Int {
+        return sharedPreferencesRepo.loadObjectiveSteps()
+    }
+
+    fun saveImplementationMode(implementationMode: ImplementationMode) {
+        sharedPreferencesRepo.saveImplementationMode(implementationMode)
+    }
+
+    fun loadImplementationMode(): Int {
+        return sharedPreferencesRepo.loadImplementationMode()
+    }
 }

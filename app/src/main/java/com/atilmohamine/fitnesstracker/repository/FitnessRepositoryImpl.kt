@@ -1,10 +1,6 @@
 package com.atilmohamine.fitnesstracker.repository
 
-import android.content.ContentValues
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
-import androidx.lifecycle.MutableLiveData
 import com.atilmohamine.fitnesstracker.model.DailyFitnessModel
 import com.atilmohamine.fitnesstracker.model.WeeklyFitnessModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -14,10 +10,10 @@ import com.google.android.gms.fitness.FitnessOptions
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.gms.fitness.data.Field
 import com.google.android.gms.fitness.request.DataReadRequest
-import java.util.*
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-class FitnessRepositoryImpl(): FitnessRepository {
+class FitnessRepositoryImpl(private val context: Context): FitnessRepository {
 
     private val fitnessOptions = FitnessOptions.builder()
         .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
@@ -28,8 +24,8 @@ class FitnessRepositoryImpl(): FitnessRepository {
         .addDataType(DataType.AGGREGATE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
         .build()
 
-    override fun getDailyFitnessData(context: Context): MutableLiveData<DailyFitnessModel> {
-        val dailyFitnessLiveData = MutableLiveData<DailyFitnessModel>()
+    override suspend fun getDailyFitnessData(): DailyFitnessModel {
+        var dailyFitness = DailyFitnessModel()
 
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -59,27 +55,29 @@ class FitnessRepositoryImpl(): FitnessRepository {
                             DataType.TYPE_STEP_COUNT_DELTA -> {
                                 stepCount = dataPoint.getValue(Field.FIELD_STEPS).asInt()
                             }
+
                             DataType.TYPE_CALORIES_EXPENDED -> {
-                                calories = dataPoint.getValue(Field.FIELD_CALORIES).asFloat().toInt() / 1000
+                                calories = dataPoint.getValue(Field.FIELD_CALORIES).asFloat()
+                                    .toInt() / 1000
                             }
+
                             DataType.TYPE_DISTANCE_DELTA -> {
                                 distance = dataPoint.getValue(Field.FIELD_DISTANCE).asFloat() / 1000
                             }
                         }
                     }
                 }
-                val dailyFitness = DailyFitnessModel(stepCount, calories, distance)
-                dailyFitnessLiveData.postValue(dailyFitness)
+                dailyFitness = DailyFitnessModel(stepCount, calories, distance)
             }
             .addOnFailureListener { exception ->
                 // Handle error
             }
 
-        return dailyFitnessLiveData
+        return dailyFitness
     }
 
-    override fun getWeeklyFitnessData(context: Context): MutableLiveData<WeeklyFitnessModel> {
-        val weeklyFitnessLiveData = MutableLiveData<WeeklyFitnessModel>()
+    override suspend fun getWeeklyFitnessData(): WeeklyFitnessModel {
+        var weeklyFitness = WeeklyFitnessModel()
 
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -115,11 +113,15 @@ class FitnessRepositoryImpl(): FitnessRepository {
                                 DataType.TYPE_STEP_COUNT_DELTA -> {
                                     stepCount = dataPoint.getValue(Field.FIELD_STEPS).asInt()
                                 }
+
                                 DataType.TYPE_CALORIES_EXPENDED -> {
-                                    calories = dataPoint.getValue(Field.FIELD_CALORIES).asFloat().toInt() / 1000
+                                    calories = dataPoint.getValue(Field.FIELD_CALORIES).asFloat()
+                                        .toInt() / 1000
                                 }
+
                                 DataType.TYPE_DISTANCE_DELTA -> {
-                                    distance = dataPoint.getValue(Field.FIELD_DISTANCE).asFloat() / 1000
+                                    distance =
+                                        dataPoint.getValue(Field.FIELD_DISTANCE).asFloat() / 1000
                                 }
                             }
                         }
@@ -129,16 +131,17 @@ class FitnessRepositoryImpl(): FitnessRepository {
                     dailyFitnessList.add(dailyFitness)
                 }
 
-                val weeklyFitness = WeeklyFitnessModel(dailyFitnessList)
-                weeklyFitnessLiveData.postValue(weeklyFitness)
+                weeklyFitness = WeeklyFitnessModel(dailyFitnessList)
+
             }
             .addOnFailureListener { exception ->
                 // Handle error
             }
 
-        return weeklyFitnessLiveData
+        return weeklyFitness
     }
 
-    override fun getGoogleAccount(context: Context): GoogleSignInAccount = GoogleSignIn.getAccountForExtension(context, fitnessOptions)
+    private fun getGoogleAccount(context: Context): GoogleSignInAccount =
+        GoogleSignIn.getAccountForExtension(context, fitnessOptions)
 
 }
