@@ -1,25 +1,24 @@
 package com.atilmohamine.fitnesstracker.ui
 
-import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import com.atilmohamine.fitnesstracker.R
-import com.atilmohamine.fitnesstracker.model.DailyFitnessModel
 import com.atilmohamine.fitnesstracker.model.WeeklyFitnessModel
 import com.atilmohamine.fitnesstracker.utils.DayAxisValueFormatter
 import com.atilmohamine.fitnesstracker.viewmodel.FitnessViewModel
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.LineDataSet
+import kotlinx.coroutines.launch
 
 
 class Statistics : Fragment() {
@@ -41,9 +40,12 @@ class Statistics : Fragment() {
 
         progressChart = rootView.findViewById(R.id.progress_chart)
 
-        fitnessViewModel.getWeeklyFitnessData(rootView.context).observe(viewLifecycleOwner, Observer { WeeklyFitness->
-            loadChart(WeeklyFitness)
-        })
+        lifecycleScope.launch {
+            fitnessViewModel.getWeeklyFitnessData()
+        }
+        fitnessViewModel.weeklyData.observe(viewLifecycleOwner) {
+            loadChart(it)
+        }
 
         return rootView
     }

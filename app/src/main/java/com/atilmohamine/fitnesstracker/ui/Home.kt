@@ -1,16 +1,18 @@
 package com.atilmohamine.fitnesstracker.ui
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import com.atilmohamine.fitnesstracker.R
 import com.atilmohamine.fitnesstracker.viewmodel.FitnessViewModel
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 class Home : Fragment() {
 
@@ -22,12 +24,10 @@ class Home : Fragment() {
 
     private val fitnessViewModel: FitnessViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
         val rootView = inflater.inflate(R.layout.fragment_home, container, false)
         requireContext()
@@ -36,15 +36,18 @@ class Home : Fragment() {
         textViewCalories = rootView.findViewById(R.id.burned_calories)
         textViewDistance = rootView.findViewById(R.id.distance)
         stepsProgressBar = rootView.findViewById(R.id.stepsProgressBar)
-        stepsProgressBar.max = fitnessViewModel.loadObjectiveSteps(rootView.context)
+        stepsProgressBar.max = fitnessViewModel.loadObjectiveSteps()
 
-        fitnessViewModel.getDailyFitnessData(rootView.context).observe(viewLifecycleOwner, Observer { DailyFitness->
-            textViewSteps.text = DailyFitness.stepCount.toString()
-            textViewStepsBig.text = DailyFitness.stepCount.toString()
-            textViewCalories.text = DailyFitness.caloriesBurned.toString()
-            textViewDistance.text = String.format("%.2f", DailyFitness.distance)
-            stepsProgressBar.progress = DailyFitness.stepCount
-        })
+        lifecycleScope.launch {
+            fitnessViewModel.getDailyFitnessData()
+        }
+        fitnessViewModel.dailyData.observe(viewLifecycleOwner) {
+            textViewSteps.text = "${it.stepCount}"
+            textViewStepsBig.text = "${it.stepCount}"
+            textViewCalories.text = "${it.caloriesBurned}"
+            textViewDistance.text = String.format(Locale.US, " % .2f", it.distance)
+            stepsProgressBar.progress = it.stepCount
+        }
 
         return rootView
     }

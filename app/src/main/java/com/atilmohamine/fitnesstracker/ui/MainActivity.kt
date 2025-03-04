@@ -5,27 +5,56 @@ import android.app.Activity
 import android.content.ContentValues.TAG
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.navigation.findNavController
 import androidx.navigation.ui.setupWithNavController
 import com.atilmohamine.fitnesstracker.R
+import com.atilmohamine.fitnesstracker.data.ImplementationMode
+import com.atilmohamine.fitnesstracker.viewmodel.FitnessViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.fitness.Fitness
 import com.google.android.gms.fitness.FitnessOptions
-import com.google.android.gms.fitness.data.DataSet
 import com.google.android.gms.fitness.data.DataType
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
-    private val GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1
     private lateinit var bottomNavigationView: BottomNavigationView
+
+    private val fitnessViewModel: FitnessViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        if (fitnessViewModel.loadImplementationMode() == ImplementationMode.GOOGLE_FIT_API.code) {
+            checkPermissionsAndRun(GOOGLE_FIT_PERMISSIONS_REQUEST_CODE)
+        } else {
+            loadNavController()
+        }
+    }
+
+    private fun loadNavController() {
+        bottomNavigationView = findViewById(R.id.bottomNavigationView)
+        val navController = findNavController(R.id.nav_controller)
+        // Get the current destination ID
+        val currentDestinationId = navController.currentDestination?.id
+
+        if (currentDestinationId != null) {
+            navController.popBackStack(currentDestinationId, false)
+            navController.navigate(currentDestinationId)
+        }
+
+        bottomNavigationView.setupWithNavController(navController)
+    }
+
+    companion object {
+        private const val GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1
+    }
 
     private val runningQOrLater =
         android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
@@ -39,27 +68,6 @@ class MainActivity : AppCompatActivity() {
         .addDataType(DataType.AGGREGATE_DISTANCE_DELTA, FitnessOptions.ACCESS_READ)
         .build()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        checkPermissionsAndRun(GOOGLE_FIT_PERMISSIONS_REQUEST_CODE)
-    }
-
-    private fun loadNav_controller() {
-        bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
-        val navController = findNavController(R.id.nav_controller)
-        // Get the current destination ID
-        val currentDestinationId = navController.currentDestination?.id
-
-        if (currentDestinationId != null) {
-            navController.popBackStack(currentDestinationId, false)
-            navController.navigate(currentDestinationId)
-        }
-
-        bottomNavigationView.setupWithNavController(navController)
-    }
-
     private fun checkPermissionsAndRun(fitActionRequestCode: Int) {
         if (permissionApproved()) {
             fitSignIn(fitActionRequestCode)
@@ -68,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestPermissions() {
+    private fun requestPermissions(requestCode: Int) {
         GoogleSignIn.requestPermissions(
             this, // your activity
             GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
@@ -79,9 +87,9 @@ class MainActivity : AppCompatActivity() {
     private fun fitSignIn(requestCode: Int) {
 
         if (!GoogleSignIn.hasPermissions(getGoogleAccount(), fitnessOptions)) {
-            requestPermissions()
+            requestPermissions(requestCode)
         } else {
-            loadNav_controller()
+            loadNavController()
         }
     }
 
@@ -135,7 +143,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when (resultCode) {
             Activity.RESULT_OK -> when (requestCode) {
-                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE -> loadNav_controller()
+                GOOGLE_FIT_PERMISSIONS_REQUEST_CODE -> loadNavController()
                 else -> {
                     // Result wasn't from Google Fit
                 }
@@ -143,7 +151,7 @@ class MainActivity : AppCompatActivity() {
             else -> {
                 // Permission not granted
                 Toast.makeText(this, "Permission not granted", Toast.LENGTH_LONG).show()
-                requestPermissions()
+                requestPermissions(requestCode)
             }
         }
     }

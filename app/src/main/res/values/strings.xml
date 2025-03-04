@@ -4,4 +4,24 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="permissions_denied_message">Permission Denied</string>
     <string name="settings">Settings</string>
+    <string name="implementation_mode_title">Action Required:\nSwitch to Health Connect</string>
+    <string name="health_connect_explanation">The Google Fit service is being phased out, and we
+        encourage you to switch to Health Connect to continue syncing your fitness and health data.
+        Please select Health Connect below to ensure a smooth experience and stay up-to-date with
+        the latest features for tracking your health and fitness.
+        </string>
+    <string name="switch_to_health_connect">Switch to Health Connect</string>
+    <string name="maybe_later">Maybe Later</string>
+    <string name="health_connect_text">
+        Syncs data from various apps and devices, giving you a complete view of
+        your health information in one place.
+        </string>
+    <string name="health_connect_thank_you">
+        Thank you for making the switch to ensure you get the best experience moving forward!
+        </string>
+
+    <string name="market_url">market://details</string>
+    <string name="health_connect_package">com.google.android.apps.healthdata</string>
+    <string name="onboarding_url">healthconnect://onboarding</string>
+
 </resources>

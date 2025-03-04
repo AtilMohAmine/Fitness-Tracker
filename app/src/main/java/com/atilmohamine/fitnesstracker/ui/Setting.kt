@@ -32,7 +32,7 @@ class Setting : Fragment() {
         stepsTextView = rootView.findViewById(R.id.steps)
         changeObjButton = rootView.findViewById(R.id.changeObj)
 
-        showObjectiveSteps(rootView.context)
+        showObjectiveSteps()
         changeObjButton.setOnClickListener{
             showObjectiveDialog(rootView.context)
         }
@@ -40,8 +40,8 @@ class Setting : Fragment() {
         return rootView
     }
 
-    private fun showObjectiveSteps(context: Context) {
-        stepsTextView.text = fitnessViewModel.loadObjectiveSteps(context).toString()
+    private fun showObjectiveSteps() {
+        stepsTextView.text = fitnessViewModel.loadObjectiveSteps().toString()
     }
 
     private fun showObjectiveDialog(context: Context) {
@@ -54,7 +54,7 @@ class Setting : Fragment() {
 
         objectiveSeekBar.minValue = 8
         objectiveSeekBar.maxValue = 40
-        objectiveSeekBar.value = fitnessViewModel.loadObjectiveSteps(context) / 1000
+        objectiveSeekBar.value = fitnessViewModel.loadObjectiveSteps() / 1000
 
         // Set the formatter to display the values in increments of 1000
         objectiveSeekBar.setFormatter( object : NumberPicker.Formatter {
@@ -66,8 +66,8 @@ class Setting : Fragment() {
         // Save the new objective steps value when the "Save" button is clicked
         dialogBuilder.setPositiveButton("Save") { _, _ ->
             val newObjectiveSteps = objectiveSeekBar.value * 1000
-            fitnessViewModel.saveObjectiveSteps(context, newObjectiveSteps)
-            showObjectiveSteps(context)
+            fitnessViewModel.saveObjectiveSteps(newObjectiveSteps)
+            showObjectiveSteps()
             Toast.makeText(context, "Objective steps saved", Toast.LENGTH_SHORT).show()
         }
 
